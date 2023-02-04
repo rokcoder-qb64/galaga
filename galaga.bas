@@ -1,3 +1,4 @@
+$DEBUG
 '======================================================================================================================================================================================================
 ' GALAGA
 '------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -544,6 +545,7 @@ SUB PrepareGameEvents
 END SUB
 
 SUB PrepareBackendEvents
+    ResetEvents
     AddEvent EVENT_UPDATE_STARS
     AddEvent EVENT_UPDATE_BACK_END
     AddEvent EVENT_RENDER_BACK_END
@@ -553,7 +555,7 @@ END SUB
 
 SUB PrepareGalaga
     DIM m%
-    m% = INT(_DESKTOPHEIGHT / 288)
+    m% = INT((_DESKTOPHEIGHT - 80) / 288)
     virtualScreen& = _NEWIMAGE(224, 288, 32)
     SCREEN _NEWIMAGE(224 * m%, 288 * m%, 32)
     _DELAY 0.5
