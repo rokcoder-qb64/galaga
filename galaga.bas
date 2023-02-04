@@ -943,6 +943,7 @@ END SUB
 SUB RenderBackend (initialised%)
     DIM handle&
     CLS
+    RenderStars
     IF backend.state% = BE_ENTER_NAME THEN
         handle& = spriteHandle&(spriteData(SPRITE_PLAYER_LIVES).offset%)
         _PUTIMAGE (1 * 8, 23 * 8 + 3), handle&
