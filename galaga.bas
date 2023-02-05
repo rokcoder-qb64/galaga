@@ -2777,12 +2777,10 @@ SUB ModifyScoreBy (score%)
         IF game.extraLife& = 20000 THEN game.extraLife& = 70000 ELSE game.extraLife& = game.extraLife& + 70000
     END IF
     game.score& = game.score& + score%
-    HideOverlays
-    ShowScore
     IF game.score& > game.hiscore& THEN
         game.hiscore& = game.score&
-        ShowHiscore
     END IF
+    HideOverlays
 END SUB
 
 SUB ShowScoreAndHiscore
