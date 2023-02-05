@@ -18,6 +18,12 @@
 ' TODO
 ' Challenge wave styles 5 to 8 (once I can find a video of them being played without destroying the aliens so I can mimic the paths)
 ' Transforms (scorpions, spy ships and flag ships) not yet implemented
+'
+' BUGS
+' When hi-score updates during game it is overwriting previous hi-score without erasing it
+' Dying just before challenge stage resulted in READY and CHALLENGE STAGE overwriting each other
+' In the fourth challenge stage, tractor beams keep appearing!
+' If you get the hi-score, the music from the leaderboard continues to play after leaving the hi-score entry board
 '======================================================================================================================================================================================================
 
 $VERSIONINFO:CompanyName=RokSoft
@@ -371,11 +377,11 @@ END TYPE
 TYPE GAME
     frameCounter AS LONG
     stage AS INTEGER
-    score AS INTEGER
+    score AS LONG
     fps AS INTEGER
-    extraLife AS INTEGER
+    extraLife AS LONG
     gameOver AS INTEGER
-    hiscore AS INTEGER
+    hiscore AS LONG
     gameOverCounter AS INTEGER
 END TYPE
 
@@ -400,7 +406,7 @@ TYPE STARS
 END TYPE
 
 TYPE HISCORE
-    score AS INTEGER
+    score AS LONG
     name AS STRING
 END TYPE
 
@@ -591,7 +597,7 @@ SUB ReadHiscores
     handle& = FREEFILE
     OPEN "scores.txt" FOR INPUT AS #handle&
     FOR i% = 0 TO 4
-        INPUT #handle&, hiscore(i%).score%
+        INPUT #handle&, hiscore(i%).score&
         INPUT #handle&, hiscore(i%).name$
     NEXT i%
     CLOSE #handle&
@@ -612,7 +618,7 @@ SUB WriteHiscores
     handle& = FREEFILE
     OPEN "scores.txt" FOR OUTPUT AS #handle&
     FOR i% = 0 TO 4
-        PRINT #handle&, hiscore(i%).score%
+        PRINT #handle&, hiscore(i%).score&
         PRINT #handle&, hiscore(i%).name$
     NEXT i%
     CLOSE #handle&
@@ -629,7 +635,7 @@ SUB ShowHighScores (highlight%)
     FOR i% = 0 TO 4
         c% = COLOUR_BLUE
         IF i% = highlight% THEN c% = COLOUR_RED
-        s$ = LTRIM$(STR$(hiscore(i%).score%))
+        s$ = LTRIM$(STR$(hiscore(i%).score&))
         PrintText pretext$(i%) + " " + s$ + SPACE$(7 + (LEN(hiscore(i%).name$) > MAX_NAME_LEN) - LEN(s$)) + hiscore(i%).name$, 1, 12 + i% * 2, c%
     NEXT i%
     PrintText "1ST BONUS FOR 20000 PTS", 4, 24, 3
@@ -641,11 +647,11 @@ END SUB
 FUNCTION InsertScore%
     DIM i%, j%
     i% = 0
-    WHILE game.score% <= hiscore(i%).score%: i% = i% + 1: WEND
+    WHILE game.score& <= hiscore(i%).score&: i% = i% + 1: WEND
     j% = 4
     WHILE j% > i%: hiscore(j%) = hiscore(j% - 1): j% = j% - 1: WEND
     hiscore(i%).name$ = "        "
-    hiscore(i%).score% = game.score%
+    hiscore(i%).score& = game.score&
     InsertScore% = i%
 END FUNCTION
 
@@ -658,7 +664,7 @@ END FUNCTION
 SUB UpdateFrontEnd (initialised%)
     IF initialised% = FALSE THEN
         frontend.state% = FE_SHOW_SCORES
-        game.hiscore% = hiscore(0).score%
+        game.hiscore& = hiscore(0).score&
         HideOverlays
         WriteHiscores
     END IF
@@ -714,10 +720,10 @@ SUB UpdateBackEnd (initialised%)
             IF backend.pause% = 0 THEN
                 HideOverlays
                 StopSfx SFX_AMBIENCE
-                IF game.score% > hiscore(4).score% THEN
+                IF game.score& > hiscore(4).score& THEN
                     backend.state% = BE_ENTER_NAME
                     backend.substate% = 0
-                    backend.score$ = LTRIM$(STR$(game.score%))
+                    backend.score$ = LTRIM$(STR$(game.score&))
                     backend.name$ = SPC(MAX_NAME_LEN)
                     backend.cursorX% = 0
                     backend.pos% = InsertScore%
@@ -2224,14 +2230,14 @@ SUB WS_InitialisePlay
         CASE 0
             game.gameOver% = FALSE
             player.lives% = 3
-            game.extraLife% = 20000
+            game.extraLife& = 20000
             InitialiseAliensForNewGame
             InitialisePlayer
             InitialiseBullets
             PlaySfx SFX_STAGE_INTRO
             game.stage% = 1
             stars.scroll% = FALSE
-            game.score% = 0
+            game.score& = 0
             HideOverlays
             PrintText "PLAYER 1", 10, 18, 2
             waveData.pauseCounter = 4 * game.fps%
@@ -2295,7 +2301,10 @@ END SUB
 SUB WS_PrepareBatch
     waveData.aliensArrived% = FALSE
     waveData.aliensInFormation% = TRUE
-    IF waveData.aliensCanAttack% = FALSE THEN MoveFormation: EXIT SUB
+    IF waveData.aliensCanAttack% = FALSE THEN
+        MoveFormation:
+        EXIT SUB
+    END IF
     IF waveData.aliensAttackingPauseCounter% > 0 THEN
         MoveFormation
         waveData.aliensAttackingPauseCounter% = waveData.aliensAttackingPauseCounter% - 1
@@ -2762,16 +2771,16 @@ END SUB
 '===== Functions supporting score modification and display ============================================================================================================================================
 
 SUB ModifyScoreBy (score%)
-    IF game.score% < game.extraLife% AND game.score% + score% >= game.extraLife% THEN
+    IF game.score& < game.extraLife& AND game.score& + score% >= game.extraLife& THEN
         PlaySfx SFX_1_UP
         player.lives% = player.lives% + 1
-        IF game.extraLife% = 20000 THEN game.extraLife% = 70000 ELSE game.extraLife% = game.extraLife% + 70000
+        IF game.extraLife& = 20000 THEN game.extraLife& = 70000 ELSE game.extraLife& = game.extraLife& + 70000
     END IF
-    game.score% = game.score% + score%
+    game.score& = game.score& + score%
     HideOverlays
     ShowScore
-    IF game.score% > game.hiscore% THEN
-        game.hiscore% = score%
+    IF game.score& > game.hiscore& THEN
+        game.hiscore& = game.score&
         ShowHiscore
     END IF
 END SUB
@@ -2783,13 +2792,13 @@ END SUB
 
 SUB ShowScore
     DIM score$
-    score$ = LTRIM$(STR$(game.score%))
+    score$ = LTRIM$(STR$(game.score&))
     PrintText score$, 6 - LEN(score$), 1, COLOUR_WHITE
 END SUB
 
 SUB ShowHiscore
     DIM score$
-    score$ = LTRIM$(STR$(game.hiscore%))
+    score$ = LTRIM$(STR$(game.hiscore&))
     PrintText score$, 17 - LEN(score$), 1, COLOUR_WHITE
 END SUB
 
