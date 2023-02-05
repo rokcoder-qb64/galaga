@@ -20,10 +20,7 @@
 ' Transforms (scorpions, spy ships and flag ships) not yet implemented
 '
 ' BUGS
-' When hi-score updates during game it is overwriting previous hi-score without erasing it
 ' Dying just before challenge stage resulted in READY and CHALLENGE STAGE overwriting each other
-' In the fourth challenge stage, tractor beams keep appearing!
-' If you get the hi-score, the music from the leaderboard continues to play after leaving the hi-score entry board
 '======================================================================================================================================================================================================
 
 $VERSIONINFO:CompanyName=RokSoft
@@ -763,6 +760,7 @@ SUB UpdateBackEnd (initialised%)
                     backend.cursor% = game.frameCounter& MOD game.fps% < game.fps% / 2
                     backend.timer% = backend.timer% - 1
                     IF (backend.pos% = 0 AND NOT IsPlayingSfx%(SFX_NAME_ENTRY_1)) OR (backend.pos% > 0 AND backend.timer% = 0) THEN
+                        StopSfx SFX_NAME_ENTRY_1
                         StopSfx SFX_NAME_ENTRY_NOT_1
                         PrepareFrontendEvents
                     END IF
@@ -990,7 +988,12 @@ SUB RenderScene (initialised%)
                     DrawSprite SPRITE_ALIEN_EXPLOSION, INT(alienData(i%).explosionCounter% / 2), alienData(i%).xPos!, alienData(i%).yPos!
                 CASE CMD_HOLD_FORMATION, CMD_INACTIVE, CMD_DESTROYED, CMD_NONE
                 CASE ELSE
-                    DrawRotatedSprite matchingSprite%(alienData(i%).alienType%), alienData(i%).xPos!, alienData(i%).yPos!, alienData(i%).rotation!, alienData(i%).costume%
+                    SELECT CASE alienData(i%).alienType%
+                        CASE TYPE_BOSS_GALAGA, TYPE_BOSS_GALAGA_SHOT, TYPE_BUTTERFLY, TYPE_BEE
+                            DrawRotatedSprite matchingSprite%(alienData(i%).alienType%), alienData(i%).xPos!, alienData(i%).yPos!, alienData(i%).rotation!, alienData(i%).costume%
+                        CASE ELSE
+                            DrawRotatedSprite matchingSprite%(alienData(i%).alienType%), alienData(i%).xPos!, alienData(i%).yPos!, alienData(i%).rotation!, 0
+                    END SELECT
             END SELECT
         END IF
     NEXT i%
