@@ -2,7 +2,7 @@
 ## Programmed by RokCoder
 
 Galaga is a 1981 fixed shooter arcade video game developed and published by Namco \
-This version is a tribute to the original programmed using QB64PE
+This version is a tribute to the original programmed using [QB64](https://qb64.com/)
 
 ### V0.1 - 4th Feb 2023 - First shared version
 
